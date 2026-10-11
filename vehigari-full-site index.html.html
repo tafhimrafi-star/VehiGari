@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VehiGari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#101318; --panel:#181c22; --panel-2:#1f242c; --line:#2a3038;
+    --text:#F3F1EA; --muted:#8B9099;
+    --amber:#FFB020; --amber-dim:#4a3a1c;
+    --teal:#00E6C3; --teal-dim:#123832;
+    --red:#FF5C5C; --red-dim:#3a1f1f;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg); color:var(--text); font-family:'Hind Siliguri', sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(circle at 15% 0%, rgba(0,230,195,0.06), transparent 40%), radial-gradient(circle at 90% 5%, rgba(255,176,32,0.06), transparent 35%);}
+  .mono{font-family:'JetBrains Mono', monospace;}
+  .wrap{max-width:1140px; margin:0 auto; padding:0 24px;}
+  a{color:inherit; text-decoration:none;}
+  ul{list-style:none;}
+  button, select, input{font-family:'Hind Siliguri', sans-serif;}
+
+  /* TOP BAR + LANGUAGE TOGGLE */
+  .topbar{background:var(--panel-2); border-bottom:1px solid var(--line); font-size:12.5px;}
+  .topbar .wrap{display:flex; justify-content:space-between; align-items:center; padding:8px 24px; color:var(--muted); gap:12px;}
+  .topbar a:hover{color:var(--teal);}
+  .lang-toggle{display:inline-flex; border:1px solid var(--line); border-radius:20px; overflow:hidden; flex:0 0 auto;}
+  .lang-btn{background:transparent; border:none; color:var(--muted); font-family:'JetBrains Mono', monospace; font-size:11.5px; font-weight:700; padding:6px 12px; cursor:pointer; letter-spacing:0.5px;}
+  .lang-btn.active{background:var(--teal); color:#062b25;}
+  .lang-btn:focus-visible{outline:2px solid var(--text); outline-offset:-2px;}
+
+  /* NAV */
+  header{position:sticky; top:0; z-index:60; background:rgba(16,19,24,0.95); backdrop-filter:blur(8px); border-bottom:1px solid var(--line);}
+  .nav-top{display:flex; align-items:center; justify-content:space-between; padding:16px 24px; gap:20px;}
+  .logo{font-family:'JetBrains Mono', monospace; font-weight:700; font-size:19px; display:flex; align-items:center; gap:8px; flex:0 0 auto;}
+  .logo .dot{width:8px; height:8px; border-radius:50%; background:var(--teal); box-shadow:0 0 8px var(--teal);}
+  .nav-icons{display:flex; align-items:center; gap:18px; font-size:20px; flex:0 0 auto;}
+  .nav-icons .badge-wrap{position:relative;}
+  .nav-icons .count{position:absolute; top:-6px; right:-8px; background:var(--amber); color:#1a1206; font-size:10px; font-weight:700; padding:1px 5px; border-radius:10px; font-family:'JetBrains Mono', monospace;}
+
+  .mega-row{border-top:1px solid var(--line); overflow-x:auto; scrollbar-width:none;}
+  .mega-row::-webkit-scrollbar{display:none;}
+  .mega-list{display:flex; gap:2px; padding:0 24px; max-width:1140px; margin:0 auto;}
+  .mega-item{position:relative;}
+  .mega-trigger{display:flex; align-items:center; gap:6px; padding:13px 14px; font-size:13.5px; font-weight:600; letter-spacing:0.2px; white-space:nowrap; cursor:pointer; color:var(--text);}
+  .mega-trigger:hover, .mega-item.open .mega-trigger{color:var(--teal);}
+  .mega-trigger .car{color:var(--muted); font-size:10px;}
+  .mega-panel{display:none; position:absolute; top:100%; left:0; min-width:220px; background:var(--panel); border:1px solid var(--line); border-radius:0 0 8px 8px; box-shadow:0 20px 40px -12px rgba(0,0,0,0.5); padding:8px 0; z-index:70;}
+  .mega-item.open .mega-panel{display:block;}
+  .mega-panel a{display:block; padding:9px 18px; font-size:13px; color:var(--muted);}
+  .mega-panel a:hover{color:var(--teal); background:var(--panel-2);}
+  .mega-link-plain{font-size:13.5px; font-weight:600; padding:13px 14px; display:flex; align-items:center; gap:4px; color:var(--amber); white-space:nowrap;}
+
+  /* HERO */
+  .hero{padding:48px 0 40px;}
+  .hero-grid{display:grid; grid-template-columns:1.1fr 0.9fr; gap:32px; align-items:start;}
+  @media(max-width:880px){.hero-grid{grid-template-columns:1fr;}}
+  .eyebrow{font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:var(--teal); display:flex; align-items:center; gap:10px; margin-bottom:18px;}
+  .eyebrow::before{content:''; width:24px; height:1px; background:var(--teal);}
+  h1{font-size:clamp(28px,4.8vw,44px); font-weight:700; line-height:1.25; margin-bottom:14px;}
+  h1 .hl{color:var(--amber);}
+  .sub{font-size:16px; color:var(--muted); max-width:520px; margin-bottom:8px;}
+
+  .finder{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:22px; box-shadow:0 20px 60px -24px rgba(0,0,0,0.6);}
+  .finder-tabs{display:flex; gap:4px; margin-bottom:18px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none;}
+  .finder-tab{font-size:13px; font-weight:600; padding:10px 4px; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-right:20px; white-space:nowrap;}
+  .finder-tab.active{color:var(--teal); border-color:var(--teal);}
+  .finder-steps{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;}
+  select{background:var(--panel-2); border:1px solid var(--line); color:var(--text); padding:13px 14px; border-radius:6px; font-size:14px; width:100%;}
+  select:focus{outline:2px solid var(--teal); outline-offset:1px;}
+  .step-num{font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--muted); margin-bottom:4px; display:block;}
+  button.primary{background:var(--amber); color:#1a1206; border:none; padding:14px 20px; border-radius:6px; font-weight:700; font-size:15px; cursor:pointer; width:100%; transition:transform .15s;}
+  button.primary:hover{transform:translateY(-1px);}
+  button.primary:focus-visible{outline:2px solid var(--text); outline-offset:2px;}
+
+  .promo-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:32px;}
+  @media(max-width:720px){.promo-row{grid-template-columns:1fr;}}
+  .promo-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:26px; display:block;}
+  .promo-card.a{border-left:3px solid var(--teal);}
+  .promo-card.b{border-left:3px solid var(--amber);}
+  .promo-card h3{font-size:18px; font-weight:700; margin-bottom:6px;}
+  .promo-card p{font-size:13.5px; color:var(--muted); margin-bottom:14px;}
+  .promo-card .go{font-size:13px; font-weight:700; color:var(--teal);}
+  .promo-card.b .go{color:var(--amber);}
+  .inline-form{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .inline-form input{flex:1; min-width:140px; background:var(--panel-2); border:1px solid var(--line); color:var(--text); padding:11px 12px; border-radius:6px; font-size:13.5px;}
+  .inline-form input:focus{outline:2px solid var(--teal); outline-offset:1px;}
+  .inline-form button.primary{width:auto; padding:11px 16px;}
+  .btn-outline{background:transparent !important; border:1px solid var(--amber) !important; color:var(--amber) !important;}
+  .thanks{color:var(--teal); font-weight:600; font-size:13.5px;}
+
+  section{padding:52px 0;}
+  .section-head{margin-bottom:28px; max-width:640px;}
+  .section-head h2{font-size:clamp(21px,3.2vw,28px); font-weight:700; margin-bottom:8px;}
+  .section-head p{color:var(--muted); font-size:14.5px;}
+
+  .trust-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  @media(max-width:880px){.trust-grid{grid-template-columns:repeat(2,1fr);}}
+  .trust-card{background:var(--panel); padding:26px 20px;}
+  .trust-card .ic{font-size:24px; margin-bottom:14px;}
+  .trust-card h3{font-size:15px; font-weight:700; margin-bottom:6px;}
+  .trust-card p{font-size:13px; color:var(--muted); margin-bottom:10px;}
+  .trust-card a{font-size:12.5px; font-weight:700; color:var(--teal);}
+
+  .chip-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:10px;}
+  @media(max-width:720px){.chip-grid{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:480px){.chip-grid{grid-template-columns:repeat(2,1fr);}}
+  .brand-chip{background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px 10px; text-align:center; font-size:13.5px; font-weight:600; transition:border-color .2s;}
+  .brand-chip:hover{border-color:var(--teal); color:var(--teal);}
+  .see-all-btn{display:inline-block; margin-top:18px; font-size:13px; font-weight:700; color:var(--amber); border:1px solid var(--line); padding:10px 18px; border-radius:6px;}
+  .see-all-btn:hover{border-color:var(--amber);}
+
+  /* DEMO */
+  .cat-scroll{display:flex; gap:10px; overflow-x:auto; padding:4px 0 22px; scrollbar-width:none;}
+  .cat-scroll::-webkit-scrollbar{display:none;}
+  .cat-chip{flex:0 0 auto; font-family:'JetBrains Mono', monospace; font-size:12px; font-weight:600; padding:10px 18px; border-radius:20px; border:1px solid var(--line); background:var(--panel); color:var(--muted); white-space:nowrap; cursor:pointer; transition:all .15s ease;}
+  .cat-chip.active{background:var(--teal); border-color:var(--teal); color:#062b25;}
+  .cat-chip:hover:not(.active){border-color:var(--teal); color:var(--text);}
+  .results-count{font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--muted); margin-bottom:14px;}
+  .car-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px;}
+  .car-card{background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; transition:border-color .2s;}
+  .car-card:hover{border-color:var(--teal);}
+  .car-thumb{height:100px; background:linear-gradient(135deg, var(--panel-2), var(--bg)); display:flex; align-items:center; justify-content:center; font-size:30px; border-bottom:1px solid var(--line);}
+  .car-body{padding:16px;}
+  .car-title{font-size:16px; font-weight:700;}
+  .car-showroom{font-size:12px; color:var(--muted); margin-bottom:14px;}
+  .stock-row{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .price{font-family:'JetBrains Mono', monospace; font-weight:700; color:var(--amber);}
+  .stock-tag{font-family:'JetBrains Mono', monospace; font-size:10.5px; font-weight:700; padding:5px 9px; border-radius:5px; white-space:nowrap;}
+  .stock-tag.plenty{background:var(--teal-dim); color:var(--teal);}
+  .stock-tag.low{background:var(--amber-dim); color:var(--amber);}
+  .stock-tag.out{background:var(--red-dim); color:var(--red);}
+  .stock-tag.listed{background:var(--panel-2); color:var(--muted); border:1px solid var(--line);}
+  .brand-chip .n{margin-left:6px; color:var(--muted); font-family:'JetBrains Mono', monospace; font-size:11px; font-weight:500;}
+  .brand-chip.soon{opacity:.45; cursor:default;}
+  .brand-chip.soon:hover{border-color:var(--line); color:inherit;}
+  .filter-bar{margin-bottom:12px;}
+  .filter-bar .pill{display:inline-flex; align-items:center; gap:8px; background:var(--teal-dim); color:var(--teal); border:1px solid var(--teal); border-radius:20px; padding:5px 12px; font-family:'JetBrains Mono', monospace; font-size:12px;}
+  .filter-bar .clear-btn{background:none; border:none; color:inherit; cursor:pointer; font-size:15px; line-height:1; padding:0;}
+  .more-wrap{text-align:center; margin-top:24px;}
+  .more-btn{background:transparent; border:1px solid var(--line); color:var(--text); padding:12px 24px; border-radius:6px; font-weight:700; font-size:14px; cursor:pointer;}
+  .more-btn:hover{border-color:var(--teal); color:var(--teal);}
+  .empty-note{color:var(--muted); font-size:14px;}
+
+  /* FAQ */
+  .faq-item{border-bottom:1px solid var(--line);}
+  .faq-q{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:18px 4px; cursor:pointer; font-weight:600; font-size:14.5px;}
+  .faq-q .plus{font-family:'JetBrains Mono', monospace; color:var(--teal); font-size:18px; transition:transform .2s; flex:0 0 auto;}
+  .faq-item.open .plus{transform:rotate(45deg);}
+  .faq-a{max-height:0; overflow:hidden; transition:max-height .25s ease; font-size:13.5px; color:var(--muted); padding:0 4px;}
+  .faq-item.open .faq-a{max-height:240px; padding-bottom:16px;}
+
+  .contact-panel{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:30px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:24px;}
+  @media(max-width:720px){.contact-panel{grid-template-columns:1fr;}}
+  .contact-panel h4{font-size:11px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:8px; font-family:'JetBrains Mono', monospace;}
+  .contact-panel .val{font-size:15px; font-weight:600;}
+
+  footer{border-top:1px solid var(--line); padding-top:44px; margin-top:20px; background:var(--panel-2);}
+  .foot-grid{display:grid; grid-template-columns:1.3fr 1fr 1fr 1.3fr; gap:32px; padding-bottom:32px;}
+  @media(max-width:820px){.foot-grid{grid-template-columns:1fr 1fr;}}
+  .foot-grid h5{font-size:12px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); margin-bottom:14px; font-family:'JetBrains Mono', monospace;}
+  .foot-grid ul li{margin-bottom:9px; font-size:13.5px; color:var(--muted);}
+  .foot-grid ul li a:hover{color:var(--teal);}
+  .foot-desc{font-size:13px; color:var(--muted); max-width:260px;}
+  .newsletter-row{display:flex; gap:8px; margin-top:10px;}
+  .newsletter-row input{flex:1; min-width:0; background:var(--panel); border:1px solid var(--line); color:var(--text); padding:11px 12px; border-radius:6px; font-size:13px;}
+  .newsletter-row button{background:var(--amber); color:#1a1206; border:none; padding:11px 16px; border-radius:6px; font-weight:700; font-size:13px; cursor:pointer;}
+  .social-row{display:flex; gap:10px; margin-top:16px;}
+  .social-row a{width:34px; height:34px; border:1px solid var(--line); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; font-family:'JetBrains Mono', monospace;}
+  .social-row a:hover{border-color:var(--teal);}
+  .foot-bottom{border-top:1px solid var(--line); padding:18px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; font-size:12.5px; color:var(--muted);}
+  .pay-icons{display:flex; gap:8px; font-size:11px; flex-wrap:wrap;}
+  .pay-icons span{border:1px solid var(--line); padding:4px 8px; border-radius:4px; font-family:'JetBrains Mono', monospace;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <a href="#dealer" data-i18n="topbar_dealer">শোরুম? পার্টনার হোন →</a>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button type="button" class="lang-btn" data-lang="bn">বাংলা</button>
+      <button type="button" class="lang-btn" data-lang="en">English</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="nav-top wrap">
+    <div class="logo"><span class="dot"></span>VEHIGARI</div>
+    <div class="nav-icons mono">
+      <span>🔍</span>
+      <span>♡</span>
+      <span class="badge-wrap">☰<span class="count">0</span></span>
+    </div>
+  </div>
+  <div class="mega-row">
+    <div class="mega-list">
+      <div class="mega-item">
+        <div class="mega-trigger"><span data-i18n="m_cars">গাড়ি</span> <span class="car">▾</span></div>
+        <div class="mega-panel">
+          <a href="#demo" data-i18n="m_new">নতুন গাড়ি</a>
+          <a href="#demo" data-i18n="m_used">ব্যবহৃত গাড়ি</a>
+          <a href="#demo" data-i18n="m_suv">SUV</a>
+          <a href="#demo" data-i18n="m_sedan">Sedan</a>
+          <a href="#demo" data-i18n="m_hatch">Hatchback</a>
+          <a href="#demo" data-i18n="m_ev">Electric / Hybrid</a>
+        </div>
+      </div>
+      <div class="mega-item">
+        <div class="mega-trigger"><span data-i18n="m_brands">ব্র্যান্ড</span> <span class="car">▾</span></div>
+        <div class="mega-panel">
+          <a href="#brands" data-i18n="m_allbrands">সব ব্র্যান্ড</a>
+          <a href="#brands">Toyota</a>
+          <a href="#brands">Honda</a>
+          <a href="#brands">Mitsubishi</a>
+          <a href="#brands">BYD</a>
+        </div>
+      </div>
+      <div class="mega-item"><a class="mega-trigger" href="#cities" data-i18n="m_showroom">শোরুম খুঁজুন</a></div>
+      <div class="mega-item">
+        <div class="mega-trigger"><span data-i18n="m_services">সেবা</span> <span class="car">▾</span></div>
+        <div class="mega-panel">
+          <a href="#faq" data-i18n="m_emi">EMI ক্যালকুলেটর</a>
+          <a href="#faq" data-i18n="m_loan">কার লোন</a>
+          <a href="#faq" data-i18n="m_insurance">ইন্স্যুরেন্স</a>
+          <a href="#contact" data-i18n="m_testdrive">টেস্ট ড্রাইভ বুকিং</a>
+        </div>
+      </div>
+      <div class="mega-item"><a class="mega-link-plain" href="#brands" data-i18n="m_seeallbrands">সব ব্র্যান্ড দেখুন →</a></div>
+      <div class="mega-item"><a class="mega-link-plain" href="#demo" data-i18n="m_seeallcars">সব গাড়ি দেখুন →</a></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero" style="padding-bottom:0;">
+    <div class="hero-grid">
+      <div>
+        <div class="eyebrow"><span>●</span> <span data-i18n="hero_eyebrow">LIVE STOCK TRACKER — বাংলাদেশ</span></div>
+        <h1 data-i18n-html="hero_h1">গাড়ি কিনুন <span class="hl">নিশ্চিন্তে</span> — কোথায় আছে, কত দামে, সব একসাথে</h1>
+        <p class="sub" data-i18n="hero_sub">১০টা শোরুমে ফোন দেওয়া বন্ধ করুন। ব্র্যান্ড, বাজেট বা বডি টাইপ দিয়ে খুঁজে বের করুন কোন শোরুমে আপনার পছন্দের গাড়ি আছে।</p>
+      </div>
+
+      <div class="finder">
+        <div class="finder-tabs">
+          <div class="finder-tab active" data-i18n="tab_model">মডেল দিয়ে খুঁজুন</div>
+          <div class="finder-tab" data-i18n="tab_budget">বাজেট দিয়ে খুঁজুন</div>
+          <div class="finder-tab" data-i18n="tab_body">বডি টাইপ দিয়ে</div>
+        </div>
+        <div class="finder-steps">
+          <div><span class="step-num mono" data-i18n="s1">১. ব্র্যান্ড</span>
+            <select><option data-i18n="choose">বেছে নিন</option><option>Toyota</option><option>Honda</option><option>Mitsubishi</option><option>BYD</option></select></div>
+          <div><span class="step-num mono" data-i18n="s2">২. বডি টাইপ</span>
+            <select><option data-i18n="choose">বেছে নিন</option><option>Sedan</option><option>SUV</option><option>Hatchback</option><option>Electric</option></select></div>
+          <div><span class="step-num mono" data-i18n="s3">৩. মডেল</span>
+            <select><option data-i18n="choose">বেছে নিন</option></select></div>
+          <div><span class="step-num mono" data-i18n="s4">৪. বাজেট</span>
+            <select><option data-i18n="choose">বেছে নিন</option><option data-i18n="b1">৩০ লাখের নিচে</option><option data-i18n="b2">৩০–৬০ লাখ</option><option data-i18n="b3">৬০ লাখের উপরে</option></select></div>
+        </div>
+        <button class="primary" type="button" id="view-cars" data-i18n="btn_view">গাড়ি দেখুন</button>
+      </div>
+    </div>
+
+    <div class="promo-row">
+      <a class="promo-card a" href="#demo">
+        <h3 data-i18n="p_new_h">নতুন গাড়ি</h3>
+        <p data-i18n="p_new_p">সব ব্র্যান্ডের নতুন গাড়ি, লাইভ স্টক সহ এক জায়গায়।</p>
+        <span class="go" data-i18n="p_go">দেখুন →</span>
+      </a>
+      <a class="promo-card b" href="#demo">
+        <h3 data-i18n="p_used_h">ব্যবহৃত গাড়ি</h3>
+        <p data-i18n="p_used_p">যাচাইকৃত বিক্রেতার কাছ থেকে ব্যবহৃত গাড়ি খুঁজুন।</p>
+        <span class="go" data-i18n="p_go">দেখুন →</span>
+      </a>
+    </div>
+  </section>
+
+  <section id="trust">
+    <div class="trust-grid">
+      <div class="trust-card"><div class="ic">📡</div><h3 data-i18n="t1_h">লাইভ স্টক</h3><p data-i18n="t1_p">কোন শোরুমে গাড়ি আছে, কয় ইউনিট — রিয়েল টাইমে দেখুন।</p><a href="#demo" data-i18n="t1_a">দেখুন →</a></div>
+      <div class="trust-card"><div class="ic">💬</div><h3 data-i18n="t2_h">বেছে নিতে সাহায্য</h3><p data-i18n="t2_p">বাজেট বা প্রয়োজন অনুযায়ী গাড়ি বাছাইয়ে সহায়তা লাগলে যোগাযোগ করুন।</p><a href="#contact" data-i18n="t2_a">যোগাযোগ →</a></div>
+      <div class="trust-card"><div class="ic">🏬</div><h3 data-i18n="t3_h">শোরুম নেটওয়ার্ক</h3><p data-i18n="t3_p">ঢাকাসহ বিভিন্ন শহরের শোরুমের সাথে পার্টনারশিপে আছি।</p><a href="#cities" data-i18n="t3_a">শহর দেখুন →</a></div>
+      <div class="trust-card"><div class="ic">✅</div><h3 data-i18n="t4_h">যাচাইকৃত তথ্য</h3><p data-i18n="t4_p">প্রতিটা দাম ও স্টক তথ্য নিয়মিত শোরুম থেকে আপডেট করা হয়।</p><a href="#demo" data-i18n="t4_a">বিস্তারিত →</a></div>
+    </div>
+  </section>
+
+  <section id="brands">
+    <div class="section-head"><h2 data-i18n="brands_h">ব্র্যান্ড অনুযায়ী খুঁজুন</h2><p data-i18n="brands_p">জনপ্রিয় গাড়ির ব্র্যান্ড বেছে নিন।</p></div>
+    <div class="chip-grid" id="brand-grid"></div>
+    <a class="see-all-btn" href="#demo" data-i18n="m_seeallbrands">সব ব্র্যান্ড দেখুন →</a>
+  </section>
+
+  <section id="cities">
+    <div class="section-head"><h2 data-i18n="cities_h">শহর অনুযায়ী শোরুম</h2><p data-i18n="cities_p">আপনার কাছাকাছি শোরুম খুঁজুন।</p></div>
+    <div class="chip-grid" id="city-grid"></div>
+  </section>
+
+  <section id="demo">
+    <div class="section-head">
+      <h2 data-i18n="demo_h">প্ল্যাটফর্মটা যেভাবে কাজ করবে</h2>
+      <p data-i18n="demo_p">নিচের সবকিছু নমুনা তথ্য দিয়ে বানানো — লঞ্চের পর real dealer data দিয়ে replace হবে।</p>
+    </div>
+    <div class="cat-scroll">
+      <div class="cat-chip active" data-cat="all" data-i18n="c_all">সব গাড়ি</div>
+      <div class="cat-chip" data-cat="sedan">Sedan</div>
+      <div class="cat-chip" data-cat="suv">SUV</div>
+      <div class="cat-chip" data-cat="hatchback">Hatchback</div>
+      <div class="cat-chip" data-cat="mpv" data-i18n="c_mpv">ফ্যামিলি / ভ্যান</div>
+      <div class="cat-chip" data-cat="pickup" data-i18n="c_pickup">পিকআপ</div>
+      <div class="cat-chip" data-cat="ev" data-i18n="c_ev">ইলেকট্রিক / হাইব্রিড</div>
+    </div>
+    <div class="filter-bar" id="brand-filter"></div>
+    <div class="results-count" id="results-count"></div>
+    <div class="car-grid" id="car-grid"></div>
+    <div class="more-wrap"><button type="button" class="more-btn" id="more-btn" style="display:none"></button></div>
+  </section>
+
+  <section id="faq">
+    <div class="section-head"><h2 data-i18n="faq_h">সচরাচর জিজ্ঞাসিত প্রশ্ন</h2></div>
+    <div id="faq-list"></div>
+  </section>
+
+  <section id="contact">
+    <div class="section-head"><h2 data-i18n="contact_h">যোগাযোগ করুন</h2><p data-i18n="contact_p">গাড়ি বাছাই, বুকিং বা পার্টনারশিপ নিয়ে সাহায্য দরকার হলে যোগাযোগ করুন।</p></div>
+    <div class="contact-panel">
+      <div><h4 data-i18n="c_phone">ফোন</h4><div class="val mono">+880 1XXX-XXXXXX</div></div>
+      <div><h4 data-i18n="c_email">ইমেইল</h4><div class="val">hello@vehigari.com</div></div>
+      <div><h4 data-i18n="c_addr">ঠিকানা</h4><div class="val" data-i18n="c_addr_val">ঢাকা, বাংলাদেশ</div></div>
+    </div>
+  </section>
+
+  <section id="join" style="padding-bottom:20px;">
+    <div class="section-head"><h2 data-i18n="join_h">এখন আমরা এই ধাপে</h2><p data-i18n="join_p">এখনো অ্যাপ তৈরি হয়নি — আমরা প্রথমে যাচাই করছি এই সমস্যাটা মানুষ সত্যিই অনুভব করে কিনা।</p></div>
+    <div class="promo-row">
+      <div class="promo-card a">
+        <h3 data-i18n="buyer_h">আমি গাড়ি কিনতে চাই</h3>
+        <p data-i18n="buyer_p">লঞ্চ হলে সবার আগে জানুন।</p>
+        <form class="inline-form" id="buyer-form" autocomplete="off">
+          <input type="text" required data-i18n-ph="ph_contact" placeholder="মোবাইল / ইমেইল">
+          <button class="primary" type="submit" data-i18n="btn_notify">জানাও</button>
+        </form>
+      </div>
+      <div class="promo-card b" id="dealer">
+        <h3 data-i18n="dealer_h">আমি শোরুম / ডিলার</h3>
+        <p data-i18n="dealer_p">প্রথম ৩ মাস লিস্টিং ও লিড সম্পূর্ণ ফ্রি।</p>
+        <form class="inline-form" id="dealer-form" autocomplete="off">
+          <input type="text" required data-i18n-ph="ph_showroom" placeholder="শোরুমের নাম">
+          <button class="primary btn-outline" type="submit" data-i18n="btn_interested">আগ্রহী</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div>
+      <div class="logo" style="margin-bottom:10px;"><span class="dot"></span>VEHIGARI</div>
+      <p class="foot-desc" data-i18n="f_desc">বাংলাদেশের গাড়ি খুঁজে নেওয়ার সবচেয়ে সহজ উপায় — লাইভ স্টক, দাম তুলনা, এক জায়গায়।</p>
+      <div class="social-row"><a href="#">f</a><a href="#">ig</a><a href="#">yt</a></div>
+    </div>
+    <div>
+      <h5 data-i18n="f_info">তথ্য</h5>
+      <ul>
+        <li><a href="#" data-i18n="f_about">আমাদের সম্পর্কে</a></li>
+        <li><a href="#" data-i18n="f_privacy">গোপনীয়তা নীতি</a></li>
+        <li><a href="#" data-i18n="f_terms">শর্তাবলী</a></li>
+        <li><a href="#contact" data-i18n="f_contact">যোগাযোগ</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5 data-i18n="f_account">আমার অ্যাকাউন্ট</h5>
+      <ul>
+        <li><a href="#" data-i18n="f_profile">আমার প্রোফাইল</a></li>
+        <li><a href="#" data-i18n="f_saved">সংরক্ষিত গাড়ি</a></li>
+        <li><a href="#" data-i18n="f_bookings">বুকিং হিস্টোরি</a></li>
+        <li><a href="#" data-i18n="f_wishlist">পছন্দের তালিকা</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5 data-i18n="f_news">নিউজলেটার</h5>
+      <p style="font-size:13px; color:var(--muted);" data-i18n="f_news_p">লঞ্চ, অফার ও নতুন গাড়ির আপডেট পেতে সাবস্ক্রাইব করুন।</p>
+      <div class="newsletter-row">
+        <input type="text" data-i18n-ph="ph_email" placeholder="ইমেইল ঠিকানা">
+        <button type="button" data-i18n="btn_sub">সাবস্ক্রাইব</button>
+      </div>
+    </div>
+  </div>
+  <div class="wrap foot-bottom">
+    <span data-i18n="f_rights">© 2026 VehiGari. সর্বস্বত্ব সংরক্ষিত।</span>
+    <div class="pay-icons"><span>bKash</span><span>Nagad</span><span>VISA</span><span>Mastercard</span></div>
+  </div>
+</footer>
+
+<script>
+  /* ================= TRANSLATIONS ================= */
+  const T = {
+    bn: {
+      title: "VehiGari — বাংলাদেশে গাড়ি খুঁজুন, দাম ও স্টক তুলনা করুন",
+      topbar_dealer: "শোরুম? পার্টনার হোন →",
+      m_cars:"গাড়ি", m_new:"নতুন গাড়ি", m_used:"ব্যবহৃত গাড়ি", m_suv:"SUV", m_sedan:"Sedan", m_hatch:"Hatchback", m_ev:"Electric / Hybrid",
+      m_brands:"ব্র্যান্ড", m_allbrands:"সব ব্র্যান্ড", m_showroom:"শোরুম খুঁজুন", m_services:"সেবা",
+      m_emi:"EMI ক্যালকুলেটর", m_loan:"কার লোন", m_insurance:"ইন্স্যুরেন্স", m_testdrive:"টেস্ট ড্রাইভ বুকিং",
+      m_seeallbrands:"সব ব্র্যান্ড দেখুন →", m_seeallcars:"সব গাড়ি দেখুন →",
+      hero_eyebrow:"LIVE STOCK TRACKER — বাংলাদেশ",
+      hero_h1:'গাড়ি কিনুন <span class="hl">নিশ্চিন্তে</span> — কোথায় আছে, কত দামে, সব একসাথে',
+      hero_sub:"১০টা শোরুমে ফোন দেওয়া বন্ধ করুন। ব্র্যান্ড, বাজেট বা বডি টাইপ দিয়ে খুঁজে বের করুন কোন শোরুমে আপনার পছন্দের গাড়ি আছে।",
+      tab_model:"মডেল দিয়ে খুঁজুন", tab_budget:"বাজেট দিয়ে খুঁজুন", tab_body:"বডি টাইপ দিয়ে",
+      s1:"১. ব্র্যান্ড", s2:"২. বডি টাইপ", s3:"৩. মডেল", s4:"৪. বাজেট", choose:"বেছে নিন",
+      b1:"৩০ লাখের নিচে", b2:"৩০–৬০ লাখ", b3:"৬০ লাখের উপরে", btn_view:"গাড়ি দেখুন",
+      p_new_h:"নতুন গাড়ি", p_new_p:"সব ব্র্যান্ডের নতুন গাড়ি, লাইভ স্টক সহ এক জায়গায়।",
+      p_used_h:"ব্যবহৃত গাড়ি", p_used_p:"যাচাইকৃত বিক্রেতার কাছ থেকে ব্যবহৃত গাড়ি খুঁজুন।", p_go:"দেখুন →",
+      t1_h:"লাইভ স্টক", t1_p:"কোন শোরুমে গাড়ি আছে, কয় ইউনিট — রিয়েল টাইমে দেখুন।", t1_a:"দেখুন →",
+      t2_h:"বেছে নিতে সাহায্য", t2_p:"বাজেট বা প্রয়োজন অনুযায়ী গাড়ি বাছাইয়ে সহায়তা লাগলে যোগাযোগ করুন।", t2_a:"যোগাযোগ →",
+      t3_h:"শোরুম নেটওয়ার্ক", t3_p:"ঢাকাসহ বিভিন্ন শহরের শোরুমের সাথে পার্টনারশিপে আছি।", t3_a:"শহর দেখুন →",
+      t4_h:"যাচাইকৃত তথ্য", t4_p:"প্রতিটা দাম ও স্টক তথ্য নিয়মিত শোরুম থেকে আপডেট করা হয়।", t4_a:"বিস্তারিত →",
+      brands_h:"ব্র্যান্ড অনুযায়ী খুঁজুন", brands_p:"জনপ্রিয় গাড়ির ব্র্যান্ড বেছে নিন।",
+      cities_h:"শহর অনুযায়ী শোরুম", cities_p:"আপনার কাছাকাছি শোরুম খুঁজুন।",
+      demo_h:"প্ল্যাটফর্মটা যেভাবে কাজ করবে", demo_p:"নিচের দামগুলো বিজ্ঞাপিত লিস্টিং মূল্য — লঞ্চের পর real dealer data দিয়ে আপডেট হবে।",
+      c_all:"সব গাড়ি", c_mpv:"ফ্যামিলি / ভ্যান", c_pickup:"পিকআপ", c_ev:"ইলেকট্রিক / হাইব্রিড", stock_listed:"লিস্টেড দাম", price_verify:"লিস্টিং যাচাই করুন", price_varies:"দাম ভিন্ন হয়", pw_ev:"ইভি", pw_phev:"প্লাগ-ইন হাইব্রিড", pw_hybrid:"হাইব্রিড", show_more:"আরও দেখুন", brand_label:"ব্র্যান্ড", results:"টি গাড়ি", no_results:"কোনো গাড়ি পাওয়া যায়নি।",
+      faq_h:"সচরাচর জিজ্ঞাসিত প্রশ্ন",
+      contact_h:"যোগাযোগ করুন", contact_p:"গাড়ি বাছাই, বুকিং বা পার্টনারশিপ নিয়ে সাহায্য দরকার হলে যোগাযোগ করুন।",
+      c_phone:"ফোন", c_email:"ইমেইল", c_addr:"ঠিকানা", c_addr_val:"ঢাকা, বাংলাদেশ",
+      join_h:"এখন আমরা এই ধাপে", join_p:"এখনো অ্যাপ তৈরি হয়নি — আমরা প্রথমে যাচাই করছি এই সমস্যাটা মানুষ সত্যিই অনুভব করে কিনা।",
+      buyer_h:"আমি গাড়ি কিনতে চাই", buyer_p:"লঞ্চ হলে সবার আগে জানুন।", ph_contact:"মোবাইল / ইমেইল", btn_notify:"জানাও",
+      dealer_h:"আমি শোরুম / ডিলার", dealer_p:"প্রথম ৩ মাস লিস্টিং ও লিড সম্পূর্ণ ফ্রি।", ph_showroom:"শোরুমের নাম", btn_interested:"আগ্রহী",
+      thanks:"ধন্যবাদ! আমরা যোগাযোগ করব।",
+      f_desc:"বাংলাদেশের গাড়ি খুঁজে নেওয়ার সবচেয়ে সহজ উপায় — লাইভ স্টক, দাম তুলনা, এক জায়গায়।",
+      f_info:"তথ্য", f_about:"আমাদের সম্পর্কে", f_privacy:"গোপনীয়তা নীতি", f_terms:"শর্তাবলী", f_contact:"যোগাযোগ",
+      f_account:"আমার অ্যাকাউন্ট", f_profile:"আমার প্রোফাইল", f_saved:"সংরক্ষিত গাড়ি", f_bookings:"বুকিং হিস্টোরি", f_wishlist:"পছন্দের তালিকা",
+      f_news:"নিউজলেটার", f_news_p:"লঞ্চ, অফার ও নতুন গাড়ির আপডেট পেতে সাবস্ক্রাইব করুন।", ph_email:"ইমেইল ঠিকানা", btn_sub:"সাবস্ক্রাইব",
+      f_rights:"© 2026 VehiGari. সর্বস্বত্ব সংরক্ষিত।",
+      stock_plenty:(n)=> n+" ইউনিট আছে", stock_low:"১টা বাকি", stock_out:"স্টক নেই",
+      price:(n)=> n+" লাখ",
+      price_cr:(n)=> n+" কোটি"
+    },
+    en: {
+      title: "VehiGari — Find cars in Bangladesh, compare price & stock",
+      topbar_dealer: "Showroom owner? Become a partner →",
+      m_cars:"Cars", m_new:"New Cars", m_used:"Used Cars", m_suv:"SUV", m_sedan:"Sedan", m_hatch:"Hatchback", m_ev:"Electric / Hybrid",
+      m_brands:"Brands", m_allbrands:"All Brands", m_showroom:"Find Showrooms", m_services:"Services",
+      m_emi:"EMI Calculator", m_loan:"Car Loan", m_insurance:"Insurance", m_testdrive:"Book a Test Drive",
+      m_seeallbrands:"See all brands →", m_seeallcars:"See all cars →",
+      hero_eyebrow:"LIVE STOCK TRACKER — BANGLADESH",
+      hero_h1:'Buy a car <span class="hl">with confidence</span> — where it is, at what price, all in one place',
+      hero_sub:"Stop calling 10 showrooms. Search by brand, budget or body type and find out which showroom has the car you want.",
+      tab_model:"Search by model", tab_budget:"Search by budget", tab_body:"Search by body type",
+      s1:"1. Brand", s2:"2. Body type", s3:"3. Model", s4:"4. Budget", choose:"Select",
+      b1:"Under 30 lakh", b2:"30–60 lakh", b3:"Above 60 lakh", btn_view:"View cars",
+      p_new_h:"New Cars", p_new_p:"New cars from every brand, with live stock, in one place.",
+      p_used_h:"Used Cars", p_used_p:"Find used cars from verified sellers.", p_go:"View →",
+      t1_h:"Live stock", t1_p:"See which showroom has the car and how many units — in real time.", t1_a:"View →",
+      t2_h:"Help choosing", t2_p:"Need help picking a car for your budget or needs? Get in touch.", t2_a:"Contact →",
+      t3_h:"Showroom network", t3_p:"We partner with showrooms in Dhaka and other major cities.", t3_a:"See cities →",
+      t4_h:"Verified data", t4_p:"Every price and stock figure is regularly updated by the showroom.", t4_a:"Details →",
+      brands_h:"Browse by brand", brands_p:"Pick from the most popular car brands.",
+      cities_h:"Showrooms by city", cities_p:"Find a showroom near you.",
+      demo_h:"How the platform will work", demo_p:"Prices below are advertised listing prices — they will be updated with real dealer data after launch.",
+      c_all:"All cars", c_mpv:"Family / Van", c_pickup:"Pickup", c_ev:"Electric / Hybrid", stock_listed:"Listed price", price_verify:"Verify listing", price_varies:"Price varies", pw_ev:"EV", pw_phev:"Plug-in hybrid", pw_hybrid:"Hybrid", show_more:"Show more", brand_label:"Brand", results:" cars", no_results:"No cars found.",
+      faq_h:"Frequently asked questions",
+      contact_h:"Contact us", contact_p:"Need help choosing a car, booking or partnering? Get in touch.",
+      c_phone:"Phone", c_email:"Email", c_addr:"Address", c_addr_val:"Dhaka, Bangladesh",
+      join_h:"Where we are right now", join_p:"The app isn't built yet — first we're checking whether people really feel this problem.",
+      buyer_h:"I want to buy a car", buyer_p:"Be the first to know when we launch.", ph_contact:"Mobile / Email", btn_notify:"Notify me",
+      dealer_h:"I'm a showroom / dealer", dealer_p:"Listings and leads are completely free for the first 3 months.", ph_showroom:"Showroom name", btn_interested:"I'm interested",
+      thanks:"Thank you! We'll be in touch.",
+      f_desc:"The easiest way to find cars in Bangladesh — live stock and price comparison in one place.",
+      f_info:"Information", f_about:"About us", f_privacy:"Privacy policy", f_terms:"Terms", f_contact:"Contact",
+      f_account:"My account", f_profile:"My profile", f_saved:"Saved cars", f_bookings:"Booking history", f_wishlist:"Wishlist",
+      f_news:"Newsletter", f_news_p:"Subscribe for launch news, offers and new car updates.", ph_email:"Email address", btn_sub:"Subscribe",
+      f_rights:"© 2026 VehiGari. All rights reserved.",
+      stock_plenty:(n)=> n+" in stock", stock_low:"Only 1 left", stock_out:"Out of stock",
+      price:(n)=> "৳"+n+" lakh",
+      price_cr:(n)=> "৳"+n+" crore"
+    }
+  };
+
+  const BN_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+  function num(n){ return lang === 'bn' ? String(n).replace(/\d/g, d => BN_DIGITS[d]) : String(n); }
+  function t(k){ return T[lang][k]; }
+
+  let lang = 'bn';
+  try { const saved = localStorage.getItem('vg_lang'); if (saved === 'bn' || saved === 'en') lang = saved; } catch(e) {}
+  let currentCat = 'all';
+  let currentBrand = '';
+  const PAGE = 12;
+  let shown = PAGE;
+
+  /* ================= DATA ================= */
+  const BRANDS = ["Toyota","Proton","Honda","Mitsubishi","BYD","Nissan","Hyundai","KIA","Suzuki","Tata","Mahindra","MG"];
+  const CITIES = [
+    {bn:"ঢাকা", en:"Dhaka"}, {bn:"চট্টগ্রাম", en:"Chattogram"}, {bn:"সিলেট", en:"Sylhet"}, {bn:"খুলনা", en:"Khulna"},
+    {bn:"রাজশাহী", en:"Rajshahi"}, {bn:"বরিশাল", en:"Barishal"}, {bn:"রংপুর", en:"Rangpur"}, {bn:"ময়মনসিংহ", en:"Mymensingh"},
+    {bn:"কুমিল্লা", en:"Cumilla"}, {bn:"নারায়ণগঞ্জ", en:"Narayanganj"}
+  ];
+  const FAQS = [
+    { q:{bn:"কীভাবে বুঝব কোন গাড়ি আমার জন্য ভালো?", en:"How do I know which car is right for me?"},
+      a:{bn:"বাজেট, পরিবারের সদস্য সংখ্যা এবং ব্যবহারের ধরন (শহর/হাইওয়ে) অনুযায়ী মডেল বেছে নিন। আমাদের বাজেট ও বডি টাইপ ফিল্টার দিয়ে দ্রুত সংক্ষিপ্ত তালিকা তৈরি করা যায়।",
+         en:"Choose by budget, family size and how you'll drive (city or highway). Our budget and body-type filters help you build a shortlist quickly."} },
+    { q:{bn:"EMI কীভাবে হিসাব হয়?", en:"How is EMI calculated?"},
+      a:{bn:"ডাউন পেমেন্ট, লোনের মেয়াদ ও সুদের হারের উপর ভিত্তি করে EMI নির্ধারিত হয়। প্ল্যাটফর্মের EMI ক্যালকুলেটর দিয়ে মাসিক কিস্তি আগেই আন্দাজ করা যাবে।",
+         en:"EMI depends on your down payment, loan term and interest rate. The platform's EMI calculator lets you estimate the monthly instalment in advance."} },
+    { q:{bn:"ব্যবহৃত গাড়ি কেনার আগে কী চেক করব?", en:"What should I check before buying a used car?"},
+      a:{bn:"ইঞ্জিন, চেসিস নম্বর, সার্ভিস হিস্টোরি এবং দুর্ঘটনার রেকর্ড যাচাই করা জরুরি। যাচাইকৃত বিক্রেতাদের তালিকা থেকে কেনা তুলনামূলক নিরাপদ।",
+         en:"Verify the engine, chassis number, service history and any accident record. Buying from verified sellers is comparatively safer."} },
+    { q:{bn:"লাইভ স্টক তথ্য কতটা নির্ভরযোগ্য?", en:"How reliable is the live stock information?"},
+      a:{bn:"শোরুম পার্টনাররা নিয়মিত আপডেট দেন এবং প্রতিটা লিস্টিং-এ শেষ আপডেটের সময় দেখানো হয়, যাতে তথ্যের সতেজতা যাচাই করা যায়।",
+         en:"Showroom partners update regularly, and every listing shows the time of its last update so you can judge how fresh the data is."} },
+    { q:{bn:"শোরুমে ইনকোয়ারি পাঠাতে কোনো চার্জ লাগবে?", en:"Is there any charge to send an inquiry to a showroom?"},
+      a:{bn:"না, ক্রেতাদের জন্য শোরুমে ইনকোয়ারি বা টেস্ট ড্রাইভ বুকিং সম্পূর্ণ ফ্রি।",
+         en:"No — sending an inquiry or booking a test drive is completely free for buyers."} }
+  ];
+  /* Advertised/listed prices in lakh. Row = [brand, model, year-or-variant, body type, price, price-max, flags]
+     flags: ap = approximate, nt = note when no price, pw = ev | phev | hybrid. No showroom/stock data yet. */
+  const RAW = [
+    ["Toyota","Corolla","1997","sedan",5.6],
+    ["Toyota","Vitz","2009","hatchback",10.4],
+    ["Toyota","Allion","2002","sedan",12.7],
+    ["Toyota","Allion","2010","sedan",18.5],
+    ["Toyota","Allion","2015","sedan",26.5],
+    ["Toyota","Premio","2003","sedan",13.5],
+    ["Toyota","Premio","2018","sedan",29.25],
+    ["Toyota","Corolla Axio","2011","sedan",15.5],
+    ["Toyota","Corolla Axio","2019","sedan",30],
+    ["Toyota","Aqua","2019","hatchback",15.2,null,{pw:"hybrid"}],
+    ["Toyota","Prius","2016","hatchback",21.5,null,{pw:"hybrid"}],
+    ["Toyota","Corolla Cross","2022","suv",46],
+    ["Toyota","Harrier","2004","suv",18],
+    ["Toyota","Harrier","2018","suv",55],
+    ["Toyota","Noah","2012","mpv",23],
+    ["Toyota","Sienta","2015","mpv",20],
+    ["Toyota","Esquire","2018","mpv",29.5],
+    ["Toyota","Voxy","2022","mpv",42],
+    ["Toyota","Alphard","2006","mpv",14],
+    ["Toyota","HiAce","2022","mpv",35.5],
+
+    ["Proton","Wira","1.5 GL Automatic","sedan",6.5],
+    ["Proton","Preve","1.6 CFE Premium CVT","sedan",10.8],
+    ["Proton","Saga","2022 used","sedan",12.5],
+    ["Proton","Saga","2023 used","sedan",13.5],
+    ["Proton","Saga","New Standard","sedan",18.5],
+    ["Proton","Saga","New Premium","sedan",20.5],
+    ["Proton","Exora","1.6 Executive CVT","mpv",18.5],
+    ["Proton","Iriz","1.6 Active CVT","hatchback",25],
+    ["Proton","Persona","1.6 Premium CVT","sedan",30],
+    ["Proton","S70","1.5TD Executive","sedan",35],
+    ["Proton","X50","Executive","suv",35],
+    ["Proton","X50","Premium","suv",38.5],
+    ["Proton","X70","1.5TD Executive","suv",38.5],
+    ["Proton","X70","2021–2022 used","suv",24.5,26.5],
+    ["Proton","X90","6-seat Premium","suv",45.9],
+    ["Proton","X90","6-seat Flagship","suv",49.9],
+
+    ["Honda","Civic","1996","sedan",5.7],
+    ["Honda","Accord","2006","sedan",13.4],
+    ["Honda","Grace","2016","sedan",16],
+    ["Honda","Grace","2017","sedan",18.5,24.5],
+    ["Honda","Grace Hybrid","2019","sedan",27.5,null,{pw:"hybrid"}],
+    ["Honda","Civic","2020","sedan",39],
+    ["Honda","Civic","2022","sedan",47],
+    ["Honda","Insight","2021","sedan",36,40,{pw:"hybrid"}],
+    ["Honda","Accord Hybrid","2024","sedan",85,null,{pw:"hybrid"}],
+    ["Honda","Accord E-HEV","2025","sedan",95,null,{pw:"hybrid"}],
+    ["Honda","HR-V","2002","suv",8.35],
+    ["Honda","CR-V","2005","suv",12],
+    ["Honda","Vezel","2014","suv",22.6,25],
+    ["Honda","Vezel","2017","suv",25],
+    ["Honda","Vezel","2018","suv",13.8],
+    ["Honda","Vezel","2022","suv",40,47],
+    ["Honda","Vezel","2024","suv",50.5],
+    ["Honda","CR-V","2016","suv",26.5],
+    ["Honda","CR-V","2021","suv",55,70],
+    ["Honda","CR-V","2022","suv",60.5,74],
+    ["Honda","CR-V Hybrid","2021","suv",54,57,{pw:"hybrid"}],
+    ["Honda","BR-V","","mpv",null,null,{nt:"verify"}],
+    ["Honda","Fit","","hatchback",20,24,{ap:1}],
+    ["Honda","Shuttle","","hatchback",20,22,{ap:1}],
+    ["Honda","Freed","","mpv",33,null,{ap:1}],
+    ["Honda","N-Box","","hatchback",null,null,{nt:"varies"}],
+    ["Honda","Mobilio","","mpv",null,null,{nt:"varies"}],
+
+    ["Mitsubishi","Lancer","2003","sedan",6],
+    ["Mitsubishi","Lancer EX","2010","sedan",14.5],
+    ["Mitsubishi","Lancer","2016","sedan",17.95],
+    ["Mitsubishi","Pajero","2003","suv",12,21.5],
+    ["Mitsubishi","Pajero","2005","suv",19.9],
+    ["Mitsubishi","Pajero Sport","2016","suv",64.5],
+    ["Mitsubishi","Pajero Sport","2019","suv",72],
+    ["Mitsubishi","Outlander","2010","suv",16.5],
+    ["Mitsubishi","Outlander","2014","suv",25.5,26.5],
+    ["Mitsubishi","Outlander","2017","suv",35,35.5],
+    ["Mitsubishi","Outlander","2022","suv",50],
+    ["Mitsubishi","Xpander","2020","mpv",25.5,30.5],
+    ["Mitsubishi","Xpander","2021–2022","mpv",28,29.5],
+    ["Mitsubishi","Eclipse Cross","2023","suv",45],
+    ["Mitsubishi","L200","2010","pickup",23,24.5],
+    ["Mitsubishi","L200","2017","pickup",33],
+
+    ["BYD","Seal 5 DM-i","","sedan",36.9,null,{pw:"phev"}],
+    ["BYD","Seal 6 EV","","sedan",44.9,null,{pw:"ev"}],
+    ["BYD","Seal","","sedan",89.9,99.9,{pw:"ev"}],
+    ["BYD","Dolphin","","hatchback",42.9,44.9,{pw:"ev"}],
+    ["BYD","Atto 3","","suv",46.9,53.9,{pw:"ev"}],
+    ["BYD","Sealion 5 DM-i","","suv",45.9,null,{pw:"phev"}],
+    ["BYD","Seal U","","suv",57.45,61.45,{pw:"phev"}],
+    ["BYD","Sealion 6 DM-i","","suv",61.9,null,{pw:"phev"}],
+    ["BYD","Sealion 6 AWD","","suv",67.9,null,{pw:"phev"}],
+    ["BYD","eMAX 7","","mpv",75,null,{pw:"ev"}],
+    ["BYD","Sealion 7","","suv",78.9,97.9,{pw:"ev"}],
+
+    ["Nissan","Sunny","2005","sedan",4.5,8],
+    ["Nissan","Bluebird","2008","sedan",13.4],
+    ["Nissan","Bluebird Sylphy","2006","sedan",11,13.8],
+    ["Nissan","Cefiro","2006–2007","sedan",10.8,14],
+    ["Nissan","Juke","2011–2012","suv",11.9,14.5],
+    ["Nissan","X-Trail","2010","suv",16.9,19.5],
+    ["Nissan","X-Trail","2012","suv",18.95,21.95],
+    ["Nissan","X-Trail","2014","suv",24.5],
+    ["Nissan","X-Trail","2015","suv",18.3,29.5],
+    ["Nissan","X-Trail Hybrid","2016","suv",27.5,null,{pw:"hybrid"}],
+    ["Nissan","X-Trail","2017","suv",26.8,37.9],
+    ["Nissan","X-Trail Hybrid","2018","suv",28.5,30.9,{pw:"hybrid"}],
+    ["Nissan","X-Trail","2020","suv",25],
+    ["Nissan","X-Trail","2023","suv",58,71],
+    ["Nissan","Patrol","1990","suv",8.5],
+    ["Nissan","Patrol","1998","suv",32.5],
+    ["Nissan","Patrol","2004–2005","suv",35,38],
+    ["Nissan","Patrol","2018","suv",340],
+    ["Nissan","Patrol","2023","suv",460]
+  ];
+  const CARS = RAW.map(function(r){
+    return Object.assign({brand:r[0], model:r[1], label:r[2], cat:r[3], p:r[4], pm:r[5] || null}, r[6] || {});
+  });
+
+  /* ================= RENDERERS ================= */
+  function renderBrands(){
+    const g = document.getElementById('brand-grid'); g.innerHTML = '';
+    BRANDS.forEach(b => {
+      const count = CARS.filter(c => c.brand === b).length;
+      const el = document.createElement(count ? 'a' : 'span');
+      el.className = 'brand-chip' + (count ? '' : ' soon');
+      el.textContent = b;
+      if (count) {
+        el.href = '#demo';
+        const n = document.createElement('span'); n.className = 'n'; n.textContent = num(count); el.appendChild(n);
+        el.addEventListener('click', () => {
+          currentBrand = b; currentCat = 'all'; shown = PAGE;
+          document.querySelectorAll('.cat-chip').forEach(c => c.classList.toggle('active', c.dataset.cat === 'all'));
+          renderCars();
+        });
+      }
+      g.appendChild(el);
+    });
+  }
+  function renderCities(){
+    const g = document.getElementById('city-grid'); g.innerHTML = '';
+    CITIES.forEach(c => { const a = document.createElement('a'); a.className='brand-chip'; a.href='#contact'; a.textContent=c[lang]; g.appendChild(a); });
+  }
+  function renderFaq(){
+    const list = document.getElementById('faq-list'); list.innerHTML = '';
+    FAQS.forEach(f => {
+      const item = document.createElement('div'); item.className='faq-item';
+      item.innerHTML = '<div class="faq-q" role="button" tabindex="0"><span></span><span class="plus">+</span></div><div class="faq-a"></div>';
+      item.querySelector('.faq-q span').textContent = f.q[lang];
+      item.querySelector('.faq-a').textContent = f.a[lang];
+      const q = item.querySelector('.faq-q');
+      const toggle = () => item.classList.toggle('open');
+      q.addEventListener('click', toggle);
+      q.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+      list.appendChild(item);
+    });
+  }
+  function stockLabel(c){
+    if (c.stock === 'plenty') return t('stock_plenty')(num(c.units));
+    if (c.stock === 'low') return t('stock_low');
+    return t('stock_out');
+  }
+  function fmtNum(n){ return num(Number.isInteger(n) ? n : +n.toFixed(2)); }
+  function priceText(c){
+    if (c.p == null) return t(c.nt === 'verify' ? 'price_verify' : 'price_varies');
+    const crore = c.p >= 100;
+    const a = crore ? c.p / 100 : c.p;
+    const b = c.pm ? (crore ? c.pm / 100 : c.pm) : null;
+    const range = b ? fmtNum(a) + '\u2013' + fmtNum(b) : fmtNum(a);
+    return (c.ap ? '~' : '') + t(crore ? 'price_cr' : 'price')(range);
+  }
+  function labelText(l){
+    if (!l) return '';
+    if (lang === 'bn') l = l.replace(/ used$/, ' ব্যবহৃত').replace(/^New /, 'নতুন ');
+    return num(l);
+  }
+  function carEmoji(c){
+    if (c.pw === 'ev') return '\u26A1';
+    return ({suv:'\uD83D\uDE99', mpv:'\uD83D\uDE90', pickup:'\uD83D\uDEFB'})[c.cat] || '\uD83D\uDE97';
+  }
+  function matches(c){
+    if (currentBrand && c.brand !== currentBrand) return false;
+    if (currentCat === 'all') return true;
+    if (currentCat === 'ev') return !!c.pw;
+    return c.cat === currentCat;
+  }
+  function renderCars(){
+    const grid = document.getElementById('car-grid');
+    const list = CARS.filter(matches);
+    const bar = document.getElementById('brand-filter');
+    bar.innerHTML = '';
+    if (currentBrand) {
+      const pill = document.createElement('span'); pill.className = 'pill';
+      pill.appendChild(document.createTextNode(t('brand_label') + ': ' + currentBrand + ' '));
+      const x = document.createElement('button'); x.type = 'button'; x.className = 'clear-btn'; x.setAttribute('aria-label', 'Clear'); x.textContent = '\u00D7';
+      x.addEventListener('click', () => { currentBrand = ''; shown = PAGE; renderCars(); });
+      pill.appendChild(x); bar.appendChild(pill);
+    }
+    document.getElementById('results-count').textContent = lang === 'bn' ? num(list.length) + t('results') : list.length + t('results');
+    grid.innerHTML = '';
+    if (!list.length) { grid.innerHTML = '<p class="empty-note">' + t('no_results') + '</p>'; }
+    list.slice(0, shown).forEach(c => {
+      const meta = [labelText(c.label), c.showroom || ''].filter(Boolean).join(' \u00B7 ') || '\u00A0';
+      let tag = '';
+      if (c.stock) tag = '<span class="stock-tag ' + c.stock + '">' + stockLabel(c) + '</span>';
+      else if (c.pw) tag = '<span class="stock-tag listed">' + t('pw_' + c.pw) + '</span>';
+      const card = document.createElement('div'); card.className = 'car-card';
+      card.innerHTML =
+        '<div class="car-thumb">' + carEmoji(c) + '</div>' +
+        '<div class="car-body">' +
+          '<div class="car-title">' + c.brand + ' ' + c.model + '</div>' +
+          '<div class="car-showroom mono">' + meta + '</div>' +
+          '<div class="stock-row"><span class="price">' + priceText(c) + '</span>' + tag + '</div>' +
+        '</div>';
+      grid.appendChild(card);
+    });
+    const more = document.getElementById('more-btn');
+    if (list.length > shown) {
+      more.style.display = '';
+      more.textContent = t('show_more') + ' (' + num(Math.min(shown, list.length)) + '/' + num(list.length) + ')';
+    } else { more.style.display = 'none'; }
+  }
+
+  /* ================= APPLY LANGUAGE ================= */
+  function applyLang(){
+    document.documentElement.lang = lang;
+    document.title = t('title');
+    document.querySelectorAll('[data-i18n]').forEach(el => { const v = t(el.dataset.i18n); if (typeof v === 'string') el.textContent = v; });
+    document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+    renderBrands(); renderCities(); renderFaq(); renderCars();
+  }
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      lang = b.dataset.lang;
+      try { localStorage.setItem('vg_lang', lang); } catch(e) {}
+      applyLang();
+    });
+  });
+
+  /* ================= INTERACTIONS ================= */
+  document.querySelectorAll('.mega-item').forEach(item => {
+    const trigger = item.querySelector('.mega-trigger');
+    if (!trigger || !item.querySelector('.mega-panel')) return;
+    trigger.addEventListener('click', () => {
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.mega-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.mega-item')) document.querySelectorAll('.mega-item').forEach(i => i.classList.remove('open'));
+  });
+  document.querySelectorAll('.finder-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.finder-tab').forEach(x => x.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+  document.getElementById('view-cars').addEventListener('click', () => { location.hash = '#demo'; });
+  document.querySelectorAll('.cat-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      currentCat = chip.dataset.cat;
+      shown = PAGE;
+      renderCars();
+    });
+  });
+  ['buyer-form','dealer-form'].forEach(id => {
+    const form = document.getElementById(id);
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      form.outerHTML = '<p class="thanks" data-i18n="thanks"></p>';
+      applyLang();
+    });
+  });
+
+  document.getElementById('more-btn').addEventListener('click', () => { shown += PAGE; renderCars(); });
+  applyLang();
+</script>
+
+</body>
+</html>
