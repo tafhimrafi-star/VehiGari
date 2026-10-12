@@ -400,7 +400,13 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  /* ================= SUPABASE CONNECTION ================= */
+  const SUPABASE_URL = 'https://obfqgfxzdtcxsoyigivm.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_Zd0x3faxVGqwQj_NYMCjVQ_314jGe36';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
   /* ================= TRANSLATIONS ================= */
   const T = {
     bn: {
@@ -793,10 +799,33 @@
   });
   ['buyer-form','dealer-form'].forEach(id => {
     const form = document.getElementById(id);
-    form.addEventListener('submit', e => {
+    form.addEventListener('submit', async e => {
       e.preventDefault();
-      form.outerHTML = '<p class="thanks" data-i18n="thanks"></p>';
-      applyLang();
+      const input = form.querySelector('input');
+      const value = input ? input.value.trim() : '';
+      const button = form.querySelector('button[type="submit"]');
+      if (!value) return;
+      if (button) button.disabled = true;
+
+      try {
+        const table = id === 'buyer-form' ? 'buyer_leads' : 'dealer_leads';
+        const payload = id === 'buyer-form'
+          ? { contact: value, source: 'homepage' }
+          : { showroom_name: value, source: 'homepage' };
+        const { error } = await supabaseClient.from(table).insert(payload);
+        if (error) throw error;
+
+        const success = document.createElement('p');
+        success.className = 'thanks';
+        success.textContent = t('thanks');
+        form.replaceWith(success);
+      } catch (error) {
+        console.error('VehiGari lead submission failed:', error);
+        alert(lang === 'bn'
+          ? 'দুঃখিত, তথ্য জমা হয়নি। আবার চেষ্টা করুন।'
+          : 'Sorry, your submission was not saved. Please try again.');
+        if (button) button.disabled = false;
+      }
     });
   });
 
